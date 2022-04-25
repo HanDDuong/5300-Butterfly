@@ -299,7 +299,7 @@ int main(int argc, char *argv[]) {
             cout << execute(result->getStatement(i)) << endl;
         }
         delete result;
-        }
+    }
   
     return EXIT_SUCCESS;
 }

@@ -4,7 +4,7 @@
  * DbFile
  * DbRelation
  *
- * @author Kyle Fraser
+ * @author Kevin Lundeen
  * @see "Seattle Universty, CPSC5300, Spring 2022"
  */
 
@@ -18,18 +18,6 @@
 
 /**
  * Global variable to hold dbenv
-
- Note to self 1: The extern keyword is applied to a global variable, function
- or template declaratioon to specify that the name of that thing
- has external linkage.
-
- THING TO LEARN 1: EXTERNAL LINKAGE
- THING TO LEARN 2: TYPE DEFINITIONS
- THING TO LEARN 3: PUBLIC VS PROTECTED
- THING TO LEARN 4: ENUMERATION TYPES
- THING TO LEARN 5: std::pair
- THING TO LEARN 6: explicit keyword
-
  */
 
 extern DbEnv *_DB_ENV;
@@ -84,33 +72,31 @@ public:
 
   /**
    * Add a new record to this block
-   @param data - The data to store for the new record
-   @returns    - The new RecordID for the new record
-   @throws     - DbBlockNoRoomError if insufficient room in the block 
+   @param data the data to store for the new record
+   @returns    the new RecordID for the new record
+   @throws     DbBlockNoRoomError if insufficient room in the block 
   */
   virtual RecordID add(const Dbt *data) = 0;
 
   /**
    *Get a record from this block
-   @param record_id   - which record to fetch
-   @returns           - the data stored for a given record
+   @param record_id   which record to fetch
+   @returns           the data stored for a given record
    */
   virtual Dbt *get(RecordID record_id) = 0;
 
   /**
    * Change the data stored or a record in this block
-   * @param record_id - which record to update
-   * @param data      - The new data to store for a given record
-   * @throws          - DbBlockNoRoomError if insufficient room in the block
+   * @param record_id  which record to update
+   * @param data       The new data to store for a given record
+   * @throws           DbBlockNoRoomError if insufficient room in the block
    *                    (old record is retained)
    */
-
   virtual void put(RecordID record_id, const Dbt &data) = 0;
-
 
   /**
    * Delete a record from this block
-   @param record_id - which record to delete 
+   @param record_id  which record to delete 
   */
   virtual void del(RecordID record_id) = 0;
 
@@ -122,7 +108,7 @@ public:
 
   /**
    * Access the whole block's memory within the BerkelyDb Dbt.
-   * @returns - raw byte stream of this block
+   * @returns raw byte stream of this block
    */
   virtual void *get_data(){ return block.get_data(); }
 
@@ -144,7 +130,7 @@ protected:
 typedef std::vector<BlockID> BlockIDs; // FIXME: will need to turn this into an iterator at some point
 
 /**
- * @class DbFile - abstract base class which represents a disk based collection of
+ * @class DbFile - abstract base class which represents a disk based collection of DbBlocks
  * DbBlocks
  * create()
  * drop()
@@ -191,21 +177,21 @@ public:
 
   /**
    * Get a specific block in this file.
-   * @param block_id - which block to get
-   * @returns        - pointer to the DbBlock (freed by caller)
+   * @param block_id  which block to get
+   * @returns         pointer to the DbBlock (freed by caller)
    */
   virtual DbBlock *get(BlockID block_id) = 0;
 
   /**
    * Write a block to this file (the block knows its BlockID)
-   * @param block  - block to write (overwrites existing block on disk)
+   * @param block  block to write (overwrites existing block on disk)
    */
   virtual void put(DbBlock *block) = 0;
 
   /**
    * Get a list of all the valid BlockID's in the file
-   * FIXME - not a good long-term approach, but we'll do this untul we put in iterators
-   * @returns - a pointer to vector of BlockIDs (freed by caller)
+   * FIXME - not a good long-term approach, but we'll do this until we put in iterators
+   * @returns  a pointer to vector of BlockIDs (freed by caller)
    */
   virtual BlockIDs *block_ids() = 0;
 
@@ -247,28 +233,13 @@ public:
   Value(std::string s) : n(0), s(s) {data_type = ColumnAttribute::TEXT; }
 };
 
-// More type aliases
-
-// identifier is a string 
+// More type aliases 
 typedef std::string Identifier;
-
-// Column names is a vector of identifiers (strings)
 typedef std::vector<Identifier> ColumnNames;
-
-// ColumnAttributes is a vector of ColumnAttribute types (INT or TEXT)
 typedef std::vector<ColumnAttribute> ColumnAttributes;
-
-// handle is a BlockID and RecordID pair
 typedef std::pair<BlockID, RecordID> Handle;
-
-// Handles is a vector of handles
 typedef std::vector<Handle> Handles; // FIXME: Will need to turn this into an iterator at some point
-
-// A dictionary (map) of identifiers and values.
-// Key = identifier
-// Value = Value
 typedef std::map<Identifier, Value> ValueDict;
-
 
 /**
  * @class DbRelationError - generic exception class for DbRelation
@@ -342,8 +313,8 @@ public:
    * <handle>
    * Where handle is sufficient to identify one specific record (e.g. returned
    * from an insert or select).
-   @ param handle - the row to update
-   @ param new values - a dictionary keyed by column names for changing columns
+   @ param handle  the row to update
+   @ param new values  a dictionary keyed by column names for changing columns
   */
   virtual void update(const Handle handle, const ValueDict *new_values) = 0;
 
@@ -351,7 +322,7 @@ public:
    * Conceptually, execute: DELETE FROM <table_name> WHERE <handle>
    * where handle is sufficient to identify one specific record (e.g, returned
    * from an insert or select).
-   * @param handle - the row to delete 
+   * @param handle  the row to delete 
    */
   virtual void del(const Handle handle) = 0;
 
@@ -362,23 +333,23 @@ public:
   //virtual Handles *select() = 0;
 
   /** Conceptually, execute: SELECT <handle> FROM <table_name> WHERE <where>
-   * @param where   - where-clause predicates
-   * @returns       - a pointer to a list of handles for qualifying rows (freed by caller)
+   * @param where   where-clause predicates
+   * @returns       a pointer to a list of handles for qualifying rows (freed by caller)
    */
   virtual Handles *select() = 0;
 
   /**
      Return a sequence of all values for a handle (SELECT *).
-     @param handle  - row to get values from
-     @returns       - dictionary of values from row (keyed by all column names)
+     @param handle  row to get values from
+     @returns       dictionary of values from row (keyed by all column names)
   */
   virtual ValueDict *project(Handle handle) = 0;
 
   /**
    * Return a sequence of values for handle given by column_names
    * (SELECT <column_names>).
-   * @param handle  - row to get values from
-   * @param column_names - list of column names to project
+   * @param handle  row to get values from
+   * @param column_names list of column names to project
    * @returns dictionary of values from row (keyed by column names)
    */
   virtual ValueDict *project(Handle handle, const ColumnNames *column_names) = 0;

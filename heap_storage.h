@@ -4,7 +4,7 @@
  * HeapFile: DbFile
  * HeapTable: DbRelation
  *
- * @author Kyle Fraser
+ * @author Kevin Lundeen
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 
