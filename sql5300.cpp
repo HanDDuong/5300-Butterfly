@@ -1,26 +1,18 @@
 /**
  * @file sql5300.cpp - main entry for the relation manaager's SQL shell
  * @author Kevin Lundeen
- * @see "Seattle University, cpsc4300/5300, Spring 2022"
+ * @see "Seattle University, cpsc4300/5300, Spring 2021"
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
-#include <iostream>
-#include <string>
+#include <string.h>
 #include <cassert>
 #include "db_cxx.h"
 #include "SQLParser.h"
 #include "sqlhelper.h"
-#include "heap_storage.h"
 
 using namespace std;
 using namespace hsql;
-
-/*
- * we allocate and initialize the _DB_ENV global
- */
-DbEnv *_DB_ENV;
 
 // forward declare
 string operatorExpressionToString(const Expr *expr);
@@ -252,7 +244,7 @@ string execute(const SQLStatement *stmt) {
  * Main entry point of the sql5300 program
  * @args dbenvpath  the path to the BerkeleyDB database environment
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
 
     // Open/create the db enviroment
     if (argc != 2) {
@@ -270,7 +262,6 @@ int main(int argc, char *argv[]) {
         cerr << "(sql5300: " << exc.what() << ")";
         exit(1);
     }
-    _DB_ENV = &env;
 
     // Enter the SQL shell loop
     while (true) {
@@ -281,16 +272,12 @@ int main(int argc, char *argv[]) {
             continue;  // blank line -- just skip
         if (query == "quit")
             break;  // only way to get out
-        if (query == "test") {
-            cout << "test_heap_storage: " << (test_heap_storage() ? "ok" : "failed") << endl;
-            continue;
-        }
 
         // use the Hyrise sql parser to get us our AST
         SQLParserResult *result = SQLParser::parseSQLString(query);
         if (!result->isValid()) {
             cout << "invalid SQL: " << query << endl;
-            delete result;
+	    delete result;
             continue;
         }
 
@@ -298,7 +285,7 @@ int main(int argc, char *argv[]) {
         for (uint i = 0; i < result->size(); ++i) {
             cout << execute(result->getStatement(i)) << endl;
         }
-        delete result;
+	delete result;
     }
     return EXIT_SUCCESS;
 }
